@@ -1,6 +1,6 @@
 # 数据合法性检测
 
-对用户输入的数据进行合法性检查，避免错误非法的数据进入服务，这是业务系统最常见的需求。很可惜Lua目前没有特别好的数据合法性检查库。
+对用户输入的数据进行合法性检查，避免错误非法的数据进入服务，这是业务系统最常见的需求。很可惜 Lua 目前没有特别好的数据合法性检查库。
 
 坦诚我们自己做的也不够好，这里只能抛砖引玉，看看大家是否有更好办法。
 
@@ -12,35 +12,32 @@
 
 #### JSON 数据格式
 
-这里主要是`JSON DECODE`时，可能存在 Crash 的问题。我们已经在 [JSON 解析的异常捕获](../json/parse_exception.md) 一章中详细说明了问题本身以及解决方法，这里就不再重复。
+这里主要是 json decode 时，可能抛出异常的问题。我们已经在 [json 解析的异常捕获](../json/parse_exception.md) 一章中详细说明了问题本身以及解决方法，这里就不再重复。
 
 #### 关键字段编码为 HEX，长度不定
 
 HEX 编码，最常见的存在有 MD5 值等。他们是由 0-9，A-F（或 a-f）组成。笔者把使用过的代码版本逐一罗列，并进行性能测试。通过这个测试，我们不仅仅可以收获参数校验的正确写法，以及可以再次印证一下效率最高的匹配，应该注意什么。
 
 ```lua
--- 纯 lua 版本，优点是兼容性好，可以使用任何 lua 语言环境
-function check_hex_lua( str, correct_len )
+require "resty.core.regex"
+
+
+-- 纯 lua 版本，优点是兼容性好，可以适用任何 lua 语言环境
+function check_hex_lua( str )
     if "string" ~= type(str) then
         return false
     end
 
-    for i=1, #str do
-        local c = str:sub(i, i)
-        if (c >= 'A' and c <= 'F') or
-         (c >= 'a' and c <= 'f') or
-         (c >= '0' and c <= '9')
-         then
-            -- print(c)
-        else
+    for i = 1, #str do
+        local ord = str:byte(i)
+        if not (
+            (48 <= ord and ord <= 57) or
+            (65 <= ord and ord <= 70) or
+            (97 <= ord and ord <= 102)
+        ) then
             return false
         end
     end
-
-    if correct_len and correct_len ~= #str then
-      return false
-    end
-
     return true
 end
 
@@ -50,7 +47,7 @@ function check_hex_default( str )
         return false
     end
 
-    return ngx.re.find(str, "([^0-9^a-f^A-F])")
+    return ngx.re.find(str, "[^0-9a-fA-F]") == nil
 end
 
 -- 使用 ngx.re.* 完成，使用调优参数 "jo"
@@ -59,7 +56,7 @@ function check_hex_jo( str )
         return false
     end
 
-    return ngx.re.find(str, "([^0-9^a-f^A-F])", "jo")
+    return ngx.re.find(str, "[^0-9a-fA-F]", "jo") == nil
 end
 
 
@@ -69,6 +66,7 @@ function do_test( name, fun )
     local start = ngx.now()
 
     local t = "012345678901234567890123456789abcdefABCDEF"
+    assert(fun(t))
     for i=1,10000*300 do
         fun(t)
     end
@@ -86,20 +84,21 @@ do_test("check_hex_jo", check_hex_jo)
 
 ```shell
 ➜  resty test.lua
-check_hex_lua   times:2.8619999885559
-check_hex_default   times:4.1790001392365
-check_hex_jo    times:0.91899991035461
+check_hex_lua   times:1.0390000343323
+check_hex_default   times:5.1929998397827
+check_hex_jo    times:0.4539999961853
 ```
 
 不知道这个结果大家是否有些意外，`check_hex_default` 的运行效率居然比 `check_hex_lua` 要差。不过所幸的是我们对正则开启了 `jo` 参数优化后，速度上有明显提升。
 
-引用一下 ngx.re.* 官方 wiki 的原文：在优化性能时，o 选项非常有用，因为正则表达式模板将仅仅被编译一次，之后缓存在 worker 级的缓存中，并被此 nginx worker 处理的所有请求共享。缓存数量上限可以通过 lua_regex_cache_max_entries 指令调整。
+引用一下 ngx.re.* 官方 wiki 的原文：在优化性能时，`o` 选项非常有用，因为正则表达式模板将仅仅被编译一次，之后缓存在 worker 级的缓存中，并被此 Nginx worker 处理的所有请求共享。缓存数量上限可以通过 lua_regex_cache_max_entries 指令调整。
 
 > 课后小作业：为什么测试用例中要使用 ngx.update_time() 呢？好好想一想。
+> 课后小作业：在测试用例里面加了一行 `require "resty.core.regex"`。试试去掉这一行，重新跑下程序。结果怎么样？
 
 #### TABLE 内部字段类型
 
-当我们接收客户端请求，除了指定字段的特殊校验外，我们最常见的需求就是对指定字段的类型做限制了。比如用户注册接口，我们就要求对方姓名、邮箱等是个字符串，手机号、电话号码等是个数字类型，详细信息可能是个图片又或者是个嵌套的 TABLE 。
+当我们接收客户端请求，除了指定字段的特殊校验外，我们最常见的需求就是对指定字段的类型做限制了。比如用户注册接口，我们就要求对方姓名、邮箱等是个字符串，手机号、电话号码等是个数字类型，详细信息可能是个图片又或者是个嵌套的 TABLE。
 
 例如我们接受用户的注册请求，注册接口示例请求 body 如下：
 
@@ -153,10 +152,10 @@ function check_args_template(args, template)
 end
 
 local args = {name="myname", tel=888888, age=18,
-    mobile_no=13888888888, love_things = ["football", "music"]}
+    mobile_no=13888888888, love_things = {"football", "music"}}
 
-print("valid   check: ", check_args_template(args, {name="", tel=0, love_things=[]}))
-print("unvalid check: ", check_args_template(args, {name="", tel=0, love_things=[], email=""}))
+print("valid   check: ", check_args_template(args, {name="", tel=0, love_things={}}))
+print("unvalid check: ", check_args_template(args, {name="", tel=0, love_things={}, email=""}))
 ```
 
 运行一下上面的代码，结果如下：

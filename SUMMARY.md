@@ -14,7 +14,7 @@
         * [while](lua/while.md)
         * [repeat](lua/repeat.md)
         * [for](lua/for.md)
-        * [break，return](lua/break.md)
+        * [break，return 和 goto](lua/break.md)
     * [Lua函数](lua/function_descrip.md)
         * [函数的定义](lua/function_define.md)
         * [函数的参数](lua/function_parameter.md)
@@ -26,14 +26,13 @@
     * [日期时间函数](lua/time_date_function.md)
     * [数学库函数](lua/math_library.md)
     * [文件操作](lua/file.md)
-* [Lua高阶]
+* Lua 高阶
     * [元表](lua/metatable.md)
     * [面向对象编程](lua/object_oriented.md)
     * [局部变量](lua/local.md)
     * [判断数组大小](lua/array_size.md)
-    * [非空判断](lua/not_nill.md)
+    * [非空判断](lua/not_nil.md)
     * [正则表达式](lua/re.md)
-    * [不用标准库](lua/not_use_lib.md)
     * [虚变量](lua/dummy_var.md)
     * [抵制使用 module() 定义模块](lua/not_use_module.md)
     * [调用代码前先定义函数](lua/function_before_use.md)
@@ -44,13 +43,12 @@
 * [Nginx](ngx/nginx.md)
     * [Nginx 新手起步](ngx/nginx_brief.md)
     * [location 匹配规则](ngx/nginx_local_pcre.md)
-    * [if 是邪恶的](ngx/if_is_evil.md)
     * [静态文件服务](ngx/static_file.md)
     * [日志](ngx/nginx_log.md)
     * [反向代理](ngx/reverse_proxy.md)
     * [负载均衡](ngx/balancer.md)
     * [陷阱和常见错误](ngx/pitfalls_and_common_mistakes.md)
-* [OpenResty]
+* OpenResty
     * [环境搭建](openresty/install.md)
         * [Windows 平台](openresty/install_on_windows.md)
         * [CentOS 平台](openresty/install_on_centos.md)
@@ -68,18 +66,18 @@
     * [不同阶段共享变量](openresty/share_var.md)
     * [防止 SQL 注入](openresty/safe_sql.md)
     * [如何发起新 HTTP 请求](openresty/how_request_http.md)
-* [LuaRestyRedisLibrary]
+* LuaRestyRedisLibrary
     * [访问有授权验证的 Redis](redis/auth_connect.md)
     * [select+set_keepalive 组合操作引起的数据读写错误](redis/select-keeplive.md)
     * [redis 接口的二次封装（简化建连、拆连等细节）](redis/out_package.md)
     * [redis 接口的二次封装（发布订阅）](redis/pub_sub_package.md)
     * [pipeline 压缩请求数量](redis/pipeline.md)
     * [script 压缩复杂请求](redis/script.md)
+    * [动态生成的 lua-resty-redis 模块方法](redis/dynamic_redis_module_method.md)
 * [LuaCjsonLibrary](json.md)
     * [json解析的异常捕获](json/parse_exception.md)
     * [稀疏数组](json/sparse_array.md)
     * [空table编码为array还是object](json/array_or_object.md)
-    * [跨平台的库选择](json/cross_os.md)
 * [PostgresNginxModule](postgres.md)
     * [调用方式简介](postgres/how_to_use.md)
     * [不支持事务](postgres/not_support_transaction.md)
@@ -97,7 +95,6 @@
     * [禁止某些终端访问](ngx_lua/allow_deny.md)
     * [请求返回后继续执行](ngx_lua/continue_after_eof.md)
     * [调试](ngx_lua/debug.md)
-    * [调用其他 C 函数动态库](ngx_lua/ffi.md)
     * [请求中断后的处理](ngx_lua/on_abort.md)
     * [我的 lua 代码需要调优么](ngx_lua/lua_opt.md)
     * [变量的共享范围](ngx_lua/lua-variable-scope.md)
@@ -105,25 +102,20 @@
     * [shared.dict 非队列性质](ngx_lua/shared_get_keys.md)
     * [正确使用长链接](ngx_lua/keepalive.md)
     * [如何引用第三方 resty 库](ngx_lua/how_use_third_lib.md)
-    * [body 在 location 中的传递](ngx_lua/capture.md)
     * [典型应用场景](ngx_lua/use_case.md)
-    * [Nginx 状态查看器]
     * [怎样理解 cosocket](ngx_lua/whats_cosocket.md)
-    * [如何使用高速缓存]
+    * [如何安全启动唯一实例的 timer ](ngx_lua/how_one_instance_time.md)
+    * [如何正确的解析域名](ngx_lua/resolve_the_domain_name.md)
 * [LuaRestyDNSLibrary](dns/main.md)
     * [使用动态 DNS 来完成 HTTP 请求](dns/use_dynamic_dns.md)
 * [LuaRestyLock](lock.md)
     * [缓存失效风暴](lock/cache-miss-storm.md)
-* [stream_lua_module]
-    * [TCP 代理负载]
-    * [基本用法]
-    * [故障细节]
-* [balancer_by_lua]
-    * [自定义 upstream 选举]
-* [OpenSSL 与 OpenResty]
-    * [什么是 HTTPS]
-    * [懒惰动态加载证书]
+* OpenResty 与 SSL
+    * [HTTPS 时代](ssl/introduction.md)
+    * [动态加载证书和 OCSP stapling](ssl/certificate.md)
+    * [TLS session resumption](ssl/session_resumption.md)
 * [测试](test.md)
+    * [代码静态分析](test/static_analysis.md)
     * [单元测试](test/unittest.md)
     * [代码覆盖率](test/coverage.md)
     * [API 测试](test/apitest.md)
@@ -141,19 +133,5 @@
     * [与 Docker 使用的网络瓶颈](web/docker.md)
 * [火焰图](flame_graph.md)
     * [什么时候使用](flame_graph/when.md)
-    * [显示的是什么](flame_graph/what.md)
     * [如何安装火焰图生成工具](flame_graph/install.md)
     * [如何定位问题](flame_graph/how.md)
-* [OpenResty 周边]
-    * [Vanilla/香草](others/vanilla/intro.md)
-        * 为什么要开发Vanilla
-        * Vanilla致力解决的问题
-        * 组织结构
-        * 性能指标
-        * Demo 示例
-        * 新浪移动的OpenResty之路
-        * [Vanilla项目实践]
-            * 新浪移动评论项目
-            * 新浪移动独立产品Vanilla改造
-    * [Mashape/kong]
-    * [如何添加自己的lua api](others/add_new_lua_api.md)

@@ -91,7 +91,7 @@ location /test {
 
 ### OpenResty 中如何规避
 
-其实大家可以大概网络爬行一下看看如何解决 SQL 注入，可以发现实现放法很多，比如替换各种关键字等。在 OpenResty 中，其实就简单很多了，只需要对输入参数进行一层过滤即可。
+其实大家可以大概网络爬行一下看看如何解决 SQL 注入，可以发现实现方法很多，比如替换各种关键字等。在 OpenResty 中，其实就简单很多了，只需要对输入参数进行一层过滤即可。
 
 对于 MySQL ，可以调用 `ndk.set_var.set_quote_sql_str` ，进行一次过滤即可。
 
@@ -99,7 +99,7 @@ location /test {
 -- for MySQL
 local req_id = [[1'; drop table cats;--]]
 res, err, errno, sqlstate =
-    db:query(string.format([[select * from cats where id = '%s']],
+    db:query(string.format([[select * from cats where id = %s]],
     ndk.set_var.set_quote_sql_str(req_id)))
 if not res then
     ngx.say("bad result: ", err, ": ", errno, ": ", sqlstate, ".")
@@ -112,6 +112,3 @@ end
     bad result: You have an error in your SQL syntax; check the manual that
     corresponds to your MySQL server version for the right syntax to use near
     '1\'; drop table cats;--''' at line 1: 1064: 42000.
-
-
-

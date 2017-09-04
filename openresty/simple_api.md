@@ -67,9 +67,15 @@ events {
 
 http {
     # 设置默认 lua 搜索路径，添加 lua 路径
-    lua_package_path 'lua/?.lua;/blah/?.lua;;';
+    # 此处写相对路径时，对启动 nginx 的路径有要求，必须在 nginx 目录下启动，require 找不到
+    # comm.param 绝对路径当然也没问题，但是不可移植，因此应使用变量 $prefix 或
+    # ${prefix}，OR 会替换为 nginx 的 prefix path。
 
-    # 对于开发研究，可以对代码 cache 进行关闭，这样不必每次都重新加载 nginx。
+    # lua_package_path 'lua/?.lua;/blah/?.lua;;';
+    lua_package_path '$prefix/lua/?.lua;/blah/?.lua;;';
+
+    # 这里设置为 off，是为了避免每次修改之后都要重新 reload 的麻烦。
+    # 在生产环境上务必确保 lua_code_cache 设置成 on。
     lua_code_cache off;
 
     server {
@@ -127,8 +133,8 @@ http {
         # 在代码路径中使用nginx变量
         # 注意： nginx var 的变量一定要谨慎，否则将会带来非常大的风险
         location ~ ^/api/([-_a-zA-Z0-9/]+) {
-            access_by_lua_file  /path/to/lua/access_check.lua;
-            content_by_lua_file /path/to/lua/$1.lua;
+            access_by_lua_file  lua/access_check.lua;
+            content_by_lua_file lua/$1.lua;
         }
     }
 }
@@ -161,7 +167,7 @@ return _M
 local param= require("comm.param")
 local args = ngx.req.get_uri_args()
 
-if not param.is_number(args.a, args.b) then
+if not args.a or not args.b or not param.is_number(args.a, args.b) then
     ngx.exit(ngx.HTTP_BAD_REQUEST)
     return
 end
